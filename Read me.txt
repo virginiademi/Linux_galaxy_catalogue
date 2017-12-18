@@ -1,0 +1,99 @@
+In questo directory ho le seguenti cose:
+
+1- nel directory per_Virginia ho il master file con tutti i dati..
+2- nel directory HTS
+3- nel directory HST_correct_name_capak ho messo i 618 fits files il cui nome e’ quello di capak_07 e questi li ho tolti da HST..
+
+Obiettivo: organizzare e nominare i file con solo id_capak
+1- creare i seguenti file:
+id_capak_available
+id_zcosmos_available
+id_missing
+
+per fare ciò’ bisogna fare un confronto id presenti in all_merged_including_finalz_flags e  id disponibili in HST_Wall_fits_files
+
+IMPORTANTE: tutti gli id disponibili si chiamano id_available.txt e sono 1023->
+mancano 254 oggetti che andranno cercati in archivio (totale 1277)
+
+2- uso il terminal
+awk ‘{ print “ grep “ $1 “ id_available.txt | wc >>j “}’ id_capak.txt > estrai_info.com
+
+seleziona tutto estrai_info.com copia e incolla nel terminal per far correre il comando
+
+j contiene tre colonne di zeri (no match tra id_capak e id_available) e 1 (match id_capak id_available)
+more j | grep -v ‘0’ |wc
+
+ci sono 618 id capak che matchano quelli disponibili.. 
+
+paste id_capak.txt j |less
+cp id_capak.txt jj
+vi jj
+paste jj j |less
+paste jj j > jjj
+more jjj | grep -v ‘ 0 ‘
+wc sposta_i_fits_a_nome_corretto.com
+mkdir ./correct_name
+more jjj | grep -v ‘0’ |awk ‘{print “mv ./HST_Wall_fits_files/“ $1 “.fits./correct_name”}’| head
+more ../jjj | grep -v ‘0’ |awk ‘{print “mv ” $1” .fits ../correct_name”}’ |head
+chmod 777 sposta_i_fits_a_nome_corretto.com
+./sposta_i_fits_a_nome_corretto.com
+
+3- per creare il file id_capak_available.txt:
+more jjj |grep -v ‘0’ |awk ‘{print $1}’ >id_capak_available.txt 
+
+dovrebbero essere 618.. invece sono 360, credo che grep cancelli non solo le colonne di zeri ma anche gli id che contengono zeri.. trova comando alternativo!!
+ossia debbo prendere solo gli 0 circondati da spazi prima e dopo!
+SOLUZIONE:
+grep -v ‘ 0 ’ jjj | awk ‘{print $1}’ > id_capak_available_correct.txt
+SONO 618!!!
+
+
+4- per creare il file id_zcosmos_available.txt
+stessa procedure di sopra .. 
+alcuni id zcosmos sono chiamati -1 perche’ non disponibili..
+questo confonde il comando del temrminal quindi tali id vanno eliminati
+
+more id_zcosmos.txt | grep -v '\-1' > id_zcosmos_valid.txt
+
+awk '{ print "grep " $1 " id_available.txt |wc >>k"}' id_zcosmos_valid.txt > estrai_zcosmos_valid.com
+
+chmod 777 estrai_zcosmos_valid.com
+touch k
+./estrai_zcosmos_valid.com
+
+questi ultimi tre comandi mi evitano di fare copia incolla..
+
+paste id_zcosmos_valid.txt k > id_zcosmos_valid_available.txt
+grep -v ' 0 ' id_zcomos_valid_available.txt | wc
+gli id zcosmos che matchano gli id available sono 219..
+
+grep -v ' 0 ' id_zcosmos_valid_available.txt | awk '{ print $1 }' > id_zcosmos_available_correct.txt
+SONO 219!!!
+
+--> oggetti mancanti 1023-(219+618)=186
+
+5- creare file missing_id.txt
+grep -v ' 1 ' id_zcosmos_valid_available.txt | awk '{ print $1 }' > id_zcosmos_missing.txt
+wc id_zcosmos_missing.txt
+mancano 715 id zcosmos
+
+grep -v ' 1 ' jj | awk '{ print $1 }' > id_capak_missing.txt
+wc id_capak_missing.txt
+mancano 659 id capak
+
+6- missing id nuova strategia:
+elimina dai 1277 i 618 _HST.fits.capak
+awk '{ print "grep -v " $1 " survived \>! j \n \\mv j survived"} ' id_capak_available_correct.txt > ! comando.com
+chmod 777 comando.com
+./comando.com
+ATTENZIONE! COMANDO COMPLESSO: AGGIUNGERE ALL'INIZIO DI comand.com LA MAGIC LINE: 
+# ! usr/bin/csh
+
+wc survived 
+660 missing objects!!!
+stessa cosa elimina gli id_zcosmos_available_correct
+awk '{ print "grep -v " $1 " survived \>! j \n \\mv j survived"} ' id_zcosmos_available_correct.txt > ! comando.com
+wc survived
+441 missing objects in total!!
+
+
